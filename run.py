@@ -41,6 +41,7 @@ CANDIDATE_DATA =(candidate_worksheet.get_all_values())
 
 CANDIDATE_NAMES_AND_IDS = bidict(CANDIDATE_DATA)
 
+CANDIDATE_NUMBER = len(CANDIDATE_NAMES_AND_IDS)
 
 
 '''Ballot area'''
@@ -49,10 +50,11 @@ BALLOTS_RAW = ballots.get_all_values()
 
 #print(BALLOTS_RAW)
 
-ballots_cleaned = []
 
 current_ballot = []
 
+ballots_cleaned = [current_ballot]
+print(BALLOTS_RAW)
 
 for line in BALLOTS_RAW:
     
@@ -78,21 +80,21 @@ print("Current live_vote_count:")
 for value, key in live_vote_count.items():
     print(f"{value}: {key}")
 
-
-
 #Phase 2 (Counting) Starts Here
 
 '''Iterate through ballots, getting each ballot's first preference and adding one to that candidate's live vote count'''
 
 def get_individual_ballot_count():
-    ballot_count = len(ballots_cleaned)
+    ballot_count = len(ballots_cleaned) 
     return ballot_count
 
 print(f"Total number of ballots: {get_individual_ballot_count()}")
 
 def get_droop_quota(ballot_count):
-    droop_quota = (ballot_count // (3 + 1)) + 1
+    droop_quota = (ballot_count // (CANDIDATE_NUMBER +  1)) + 1
     return droop_quota
+
+print("Droop quota:", get_droop_quota(get_individual_ballot_count()))
 
 for ballot in ballots_cleaned:
     for entry in ballot:
