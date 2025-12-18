@@ -4,6 +4,7 @@
 '''the below code was taken with minor alterations from the 
 Love Sandwiches project code'''
 
+from operator import invert
 from bidict import bidict
 
 import gspread
@@ -26,21 +27,19 @@ class Election:
 
         self.current_counts = {candidate: 0 for candidate in candidates}
 
-
-
-
-        
-
-
+    def get_candidates(self):
+        return self.candidates
+    
+    def get_ballots(self):
+        return self.ballots
+    
     def initialise__new_round(self, previous_round_number, previous_vote_count):
         round_number = previous_round_number + 1
         new_round = Round(round_number, previous_vote_count)
         self.rounds.append(new_round)
         return new_round
     
-    def get_current_round(self):
-        return self.current_round
-    
+
     
 
 
@@ -49,6 +48,31 @@ class Round:
         self.round_number = round_number
         self.previous_vote_count = previous_vote_count
         self.winners = []
+        self.current_vote_count = {}
+
+    def count_votes(self, candidate_data, ballots):
+        
+        self.current_vote_count = {candidate: 0 for candidate in candidate_data.inverse}
+        print("Vote count initialized:", self.current_vote_count)
+        # print(self.previous_vote_count)
+        if self.previous_vote_count is None:
+            for ballot in ballots:
+                for line in ballot:
+                    if line[1] == '1':
+                        candidate_name = line[0]
+                        self.current_vote_count[candidate_name] += 1
+            vote_count = self.current_vote_count
+        else:
+            vote_count = self.previous_vote_count
+
+            
+        return vote_count
+
+    def check_for_winners(self, droop_quota, live_vote_count):
+        for candidate in live_vote_count:
+            if live_vote_count[candidate] >= droop_quota:
+                self.winners.append(candidate)
+        return self.winners
         
 
       
@@ -105,7 +129,7 @@ BALLOTS_RAW = ballots.get_all_values()
 current_ballot = []
 
 ballots_cleaned = [current_ballot]
-print(BALLOTS_RAW)
+#print(BALLOTS_RAW)
 
 for line in BALLOTS_RAW:
     
@@ -118,7 +142,7 @@ for line in BALLOTS_RAW:
     else:
         current_ballot.append(line)
         
-print(ballots_cleaned)
+#print(ballots_cleaned)
 
 '''The ballots_cleaned variable is a list of ballots. Each ballot is a list of 
 lists, representing candidate name and preference number.'''
@@ -126,18 +150,8 @@ lists, representing candidate name and preference number.'''
 
 current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots_cleaned)
 
-print(current_election.candidates)
-print(current_election.ballots)
-print(current_election.rounds)
-print(".current_round_number:", current_election.current_round_number)
 
 
-
-live_vote_count = {CANDIDATE_NAMES_AND_IDS[candidate]:0 for candidate in CANDIDATE_NAMES_AND_IDS}
-
-print("Current live_vote_count:")
-for value, key in live_vote_count.items():
-    print(f"{value}: {key}")
 
 #Phase 2 (Counting) Starts Here
 
@@ -147,7 +161,7 @@ def get_individual_ballot_count():
     ballot_count = len(ballots_cleaned) 
     return ballot_count
 
-print(f"Total number of ballots: {get_individual_ballot_count()}")
+#print(f"Total number of ballots: {get_individual_ballot_count()}")
 
 def get_droop_quota(ballot_count):
     droop_quota = (ballot_count // (CANDIDATE_NUMBER +  1)) + 1
@@ -155,7 +169,9 @@ def get_droop_quota(ballot_count):
 
 droop_quota= get_droop_quota(get_individual_ballot_count())
 
-print("Droop quota:", get_droop_quota(get_individual_ballot_count()))
+#print("Droop quota:", get_droop_quota(get_individual_ballot_count()))
+
+'''
 
 for ballot in ballots_cleaned:
     for entry in ballot:
@@ -163,16 +179,21 @@ for ballot in ballots_cleaned:
             candidate_name = entry[0]
             live_vote_count[candidate_name] += 1
 
-print("Updated live_vote_count:")
+
+
+#print("Updated live_vote_count:")
 for value, key in live_vote_count.items():
     print(f"{value}: {key}")
 
+    '''
 def check_for_winner(droop_quota, live_vote_count):
     winners = []
     for candidate in live_vote_count:
         if live_vote_count[candidate] >= droop_quota:
             winners.append(candidate)
     return winners
+
+    
 
 def get_surplus_votes(droop_quota, live_vote_count):
     pass
@@ -202,7 +223,7 @@ def current_round():
 
 
  
-
+'''
 if check_for_winner(droop_quota, live_vote_count):
     
     for winner in winners:
@@ -225,7 +246,7 @@ else:
     
 
 print("Winners:", check_for_winner(get_droop_quota(get_individual_ballot_count()), live_vote_count))
-
+'''
 def get_surplus_votes(droop_quota, live_vote_count):
     surplus_votes = {}
     for candidate in live_vote_count:
@@ -241,3 +262,10 @@ def get_lowest_candidates(live_vote_count):
             lowest_candidates.append(candidate)
     return lowest_candidates
 
+
+
+'''Test the logic just for the first round of counting'''
+
+print(current_election.rounds[0].count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned))
+
+    
