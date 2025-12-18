@@ -19,8 +19,10 @@ class Election:
         self.candidates = candidates
         self.ballots = ballots
         self.seats = seats
+        self.elected = []
+        self.quota = self.get_droop_quota()
 
-        '''We need a list of Round objects'''
+        '''We need a list of Round objects for each round of vote counting'''
 
         self.rounds = []
 
@@ -28,6 +30,27 @@ class Election:
         self.current_round_number = self.current_round.round_number
 
         self.current_counts = {candidate: 0 for candidate in candidates}
+
+    def run_election(self):
+        while len(self.elected) < self.seats:
+            round = Round(self.current_round_no, self.current_vote_count)
+
+            if self.current_round_no == 1:
+                round.count_first_preferences(self.ballots)
+
+            winners = round.find_winners(self.quota)
+
+            if winners:
+                for winner in winners:
+                    round.redistribute_surplus(winner, self.ballots, self.quota)
+                    self.elected.append(winner)
+            else:
+                lowest = self.find_lowest(round.vote_count)
+                round.eliminate(lowest, self.ballots)
+
+            self.current_vote_count = round.vote_count
+            self.rounds.append(round)
+            self.current_round_no += 1
 
     def get_candidates(self):
         return self.candidates
@@ -70,14 +93,59 @@ class Election:
         new_round = Round(round_number, previous_vote_count)
         self.rounds.append(new_round)
         return new_round
-
+    
+    def count_first_preferences(self, ballots):
+        for ballot in ballots:
+            first = ballot.get_first_preference()
+            self.vote_count[first] += 1
+    
+    def find_winners(self, quota):
+        self.winners = [ 
+            c for c, v in self.vote_count.items()
+            if v >= quota
+        ]
+        return self.winners
 
 class Round:
-    def __init__(self, round_number, previous_vote_count):
+
+    def __init__(self, round_number, vote_count):
         self.round_number = round_number
-        self.previous_vote_count = previous_vote_count
+        self.vote_count = vote_count.copy()
         self.winners = []
-        self.current_vote_count = previous_vote_count
+        self.eliminated = []
+
+
+    def count_first_preferences(self, ballots):
+        '''Counts first preference votes from the ballots and updates the vote_count dictionary.'''
+        for ballot in ballots:
+            first = ballot.get_first_preference()
+            self.vote_count[first] += 1
+
+    def find_winners(self, droop_quota):
+        '''Finds candidates who have reached or exceeded the droop quota and adds them to the winners list.'''
+        self.winners = [ 
+            c for c, v in self.vote_count.items()
+            if v >= droop_quota
+        ]
+        return self.winners 
+    
+    def eliminate(self, lowest_candidates, ballots):
+        '''Eliminates the candidates with the lowest votes and redistributes their votes.'''
+        for candidate in lowest_candidates:
+            self.eliminated.append(candidate)
+            del self.vote_count[candidate]
+        
+        # Redistribute votes of eliminated candidates
+        for ballot in ballots:
+            first = ballot.get_first_preference()
+            if first in lowest_candidates:
+                next_preference = ballot.get_next_preference(exclude=self.eliminated)
+                if next_preference:
+                    self.vote_count[next_preference] += 1
+
+
+'''
+
 
     def run_round(self):
         self.count_votes(self.current_vote_count, ballots)
@@ -85,9 +153,10 @@ class Round:
         if self.winners:
             for winner in self.winners:
                 self.redistribute_winner_votes(winner,self.current_vote_count, self.ballots, self.droop_quota)
-
         else:
             self.redistribute_lowest_votes
+
+        return self.current_vote_count
 
 
 
@@ -141,8 +210,24 @@ class Round:
                 print(f"Transferring {transfer_value} votes to {next_candidate}")
 
     def redistribute_lowest_votes(self, candidate, current_vote_count, ballots):
-        '''All votes for the candidate(s) with the lowest votes are redistributed'''
+       
+       
+       All votes for the candidate(s) with the lowest votes are redistributed
+       
+       
         surplus_votes = self.current_vote_count[candidate]
+        print(f"Redistributing votes for lowest candidate {candidate}, votes to redistribute: {surplus_votes}")
+        next_preference_votes = {next_preference_candidate: 0  for next_preference_candidate in current_vote_count if next_preference_candidate != candidate}
+        for ballot in ballots:
+            for line in ballot:
+                if line[1] == '1' and line[0] == candidate:
+                    # Find the next preference on this ballot
+                    for next_line in ballot:
+                        if next_line[1] == '2':
+                            next_candidate = next_line[0]
+                            next_preference_votes[next_candidate] += 1
+
+'''
 
 # Google Sheets setup code below
     
