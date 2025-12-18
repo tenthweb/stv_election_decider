@@ -1,1 +1,1 @@
-# Your requirements go here
+bidict==0.23.1
