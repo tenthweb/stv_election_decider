@@ -79,6 +79,19 @@ class Round:
         self.winners = []
         self.current_vote_count = previous_vote_count
 
+    def run_round(self):
+        self.count_votes(self.current_vote_count, ballots)
+        self.check_for_winners(self.droop_quota, self.current_vote_count)
+        if self.winners:
+            for winner in self.winners:
+                self.redistribute_winner_votes(winner,self.current_vote_count, self.ballots, self.droop_quota)
+
+        else:
+            self.redistribute_lowest_votes
+
+
+
+
     def count_votes(self, current_vote_count, ballots):
         
         print("Vote count initialized:", self.current_vote_count)
@@ -100,6 +113,7 @@ class Round:
         for candidate in current_vote_count:
             if current_vote_count[candidate] >= droop_quota:
                 self.winners.append(candidate)
+        print(f"Winners found: {self.winners}")
         return self.winners
     
     def redistribute_winner_votes(self, candidate, current_vote_count, ballots, droop_quota):
@@ -118,6 +132,20 @@ class Round:
             print(f"Next preference votes: {next_preference_votes}")
             next_preference_votes_total = sum(next_preference_votes.values())
             print(f"Total next preference votes: {next_preference_votes_total}")
+            for next_candidate in next_preference_votes:
+                if next_preference_votes_total > 0:
+                    transfer_value = (next_preference_votes[next_candidate] / next_preference_votes_total) * surplus_votes
+                else:
+                    transfer_value = 0
+                current_vote_count[next_candidate] += transfer_value
+                print(f"Transferring {transfer_value} votes to {next_candidate}")
+
+    def redistribute_lowest_votes(self, candidate, current_vote_count, ballots):
+        '''All votes for the candidate(s) with the lowest votes are redistributed'''
+        surplus_votes = self.current_vote_count[candidate]
+
+# Google Sheets setup code below
+    
 
         
 
