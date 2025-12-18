@@ -4,6 +4,7 @@
 '''the below code was taken with minor alterations from the 
 Love Sandwiches project code'''
 
+from itertools import count
 from operator import invert
 from bidict import bidict
 
@@ -21,9 +22,9 @@ class Election:
 
         '''We need a list of Round objects'''
 
-        self.rounds = [Round(1, None)]
+        self.rounds = []
 
-        self.current_round = self.rounds[-1]
+        self.current_round = self.initialise_first_round()
         self.current_round_number = self.current_round.round_number
 
         self.current_counts = {candidate: 0 for candidate in candidates}
@@ -43,20 +44,32 @@ class Election:
     def get_seats_count(self):
         return self.seats
     
+    '''Using the 1/(seats+1) formula for Droop quota without using
+    other variations, such as adding 1 or using floor or ceiling functions.
+    We're using "strictly greater than the quota" as the criterion for
+    winning, and allowing fractions of votes for surplus distribution,
+    so this is acceptable.'''
+
     def get_droop_quota(self):
         ballot_count = len(self.ballots)
         candidate_count = len(self.candidates)
         droop_quota = (ballot_count / (self.seats + 1))
         return droop_quota
     
+    def initialise_vote_count(self):
+        self.current_counts = {candidate: 0 for candidate in self.candidates.inverse}
+        return self.current_counts
+    
+    def initialise_first_round(self):
+        first_round = Round(1, {candidate: 0 for candidate in self.candidates.inverse})
+        self.rounds.append(first_round)
+        return first_round
+
     def initialise__new_round(self, previous_round_number, previous_vote_count):
         round_number = previous_round_number + 1
         new_round = Round(round_number, previous_vote_count)
         self.rounds.append(new_round)
         return new_round
-    
-
-    
 
 
 class Round:
@@ -64,14 +77,13 @@ class Round:
         self.round_number = round_number
         self.previous_vote_count = previous_vote_count
         self.winners = []
-        self.current_vote_count = {}
+        self.current_vote_count = previous_vote_count
 
-    def count_votes(self, candidate_data, ballots):
+    def count_votes(self, current_vote_count, ballots):
         
-        self.current_vote_count = {candidate: 0 for candidate in candidate_data.inverse}
         print("Vote count initialized:", self.current_vote_count)
         # print(self.previous_vote_count)
-        if self.previous_vote_count is None:
+        if self.round_number == 1:
             for ballot in ballots:
                 for line in ballot:
                     if line[1] == '1':
@@ -89,10 +101,25 @@ class Round:
             if current_vote_count[candidate] >= droop_quota:
                 self.winners.append(candidate)
         return self.winners
+    
+    def redistribute_winner_votes(self, candidate, current_vote_count, ballots, droop_quota):
+            surplus_votes = current_vote_count[candidate] - droop_quota
+            print(f"Redistributing surplus votes for {candidate}, surplus votes: {surplus_votes}")
+            next_preference_votes = {next_preference_candidate: 0  for next_preference_candidate in current_vote_count if next_preference_candidate != candidate}
+            for ballot in ballots:
+                for line in ballot:
+                    if line[1] == '1' and line[0] == candidate:
+                        # Find the next preference on this ballot
+                        for next_line in ballot:
+                            if next_line[1] == '2':
+                                next_candidate = next_line[0]
+                                next_preference_votes[next_candidate] += 1
+
+            print(f"Next preference votes: {next_preference_votes}")
+            next_preference_votes_total = sum(next_preference_votes.values())
+            print(f"Total next preference votes: {next_preference_votes_total}")
+
         
-
-      
-
 
 
 
@@ -163,12 +190,14 @@ for line in BALLOTS_RAW:
 lists, representing candidate name and preference number.'''
 '''TODO make ballots into objects'''
 
-current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots_cleaned)
+
+
+current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots_cleaned, 4)
 
 
 
 
-#Phase 2 (Counting) Starts Here
+
 
 '''Iterate through ballots, getting each ballot's first preference and adding one to that candidate's live vote count'''
 
@@ -178,29 +207,7 @@ def get_individual_ballot_count():
 
 #print(f"Total number of ballots: {get_individual_ballot_count()}")
 
-def get_droop_quota(ballot_count):
-    droop_quota = (ballot_count // (CANDIDATE_NUMBER +  1)) + 1
-    return droop_quota
 
-droop_quota= get_droop_quota(get_individual_ballot_count())
-
-#print("Droop quota:", get_droop_quota(get_individual_ballot_count()))
-
-'''
-
-for ballot in ballots_cleaned:
-    for entry in ballot:
-        if entry[1] == '1':
-            candidate_name = entry[0]
-            live_vote_count[candidate_name] += 1
-
-
-
-#print("Updated live_vote_count:")
-for value, key in live_vote_count.items():
-    print(f"{value}: {key}")
-
-    '''
 def check_for_winner(droop_quota, live_vote_count):
     winners = []
     for candidate in live_vote_count:
@@ -283,4 +290,13 @@ def get_lowest_candidates(live_vote_count):
 
 #print(current_election.rounds[0].count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned))
 print(f"With {current_election.get_seats_count()} seats and {current_election.get_ballot_count()} ballots, the droop quota is {current_election.get_droop_quota()}.")
-    
+
+test_current_election_round_count = current_election.current_round.count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned)
+print(f"round 1 vote count: {test_current_election_round_count}")
+print(f"round 1 winners: {current_election.current_round.check_for_winners(current_election.get_droop_quota(), test_current_election_round_count)}")
+
+
+current_election.current_round.redistribute_winner_votes(current_election.current_round.winners[0],
+        test_current_election_round_count,
+        ballots_cleaned,
+        current_election.get_droop_quota())
