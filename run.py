@@ -9,6 +9,29 @@ from bidict import bidict
 import gspread
 from google.oauth2.service_account import Credentials
 
+
+'''classes for ballots and candidates will go here'''
+
+class Election:
+    def __init__(self, candidates, ballots, rounds):
+        self.candidates = candidates
+        self.ballots = ballots
+        self.rounds = rounds
+
+    def add_round(self, round):
+        self.rounds.append(round)
+
+
+class Round:
+    def __init__(self, round_number, winners):
+        self.round_number = round_number
+        self.winners = winners
+
+
+
+
+
+
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -42,6 +65,8 @@ CANDIDATE_DATA =(candidate_worksheet.get_all_values())
 CANDIDATE_NAMES_AND_IDS = bidict(CANDIDATE_DATA)
 
 CANDIDATE_NUMBER = len(CANDIDATE_NAMES_AND_IDS)
+
+current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots, [])
 
 
 '''Ballot area'''
@@ -94,6 +119,8 @@ def get_droop_quota(ballot_count):
     droop_quota = (ballot_count // (CANDIDATE_NUMBER +  1)) + 1
     return droop_quota
 
+droop_quota= get_droop_quota(get_individual_ballot_count())
+
 print("Droop quota:", get_droop_quota(get_individual_ballot_count()))
 
 for ballot in ballots_cleaned:
@@ -106,5 +133,77 @@ print("Updated live_vote_count:")
 for value, key in live_vote_count.items():
     print(f"{value}: {key}")
 
+def check_for_winner(droop_quota, live_vote_count):
+    winners = []
+    for candidate in live_vote_count:
+        if live_vote_count[candidate] >= droop_quota:
+            winners.append(candidate)
+    return winners
 
+def get_surplus_votes(droop_quota, live_vote_count):
+    pass
+
+def remove_candidate_from_live_count(winner, live_vote_count):
+    pass
+
+def resdistribute_surplus_votes(winner, live_vote_count, ballots_cleaned, droop_quota):
+    pass
+
+def add_candidate_to_winners_list(winner, winners):
+    pass
+
+def find_lowest_candidates(live_vote_count):
+    pass
+
+def redistribute_lowest_candidate_votes(live_vote_count, ballots_cleaned):
+    pass
+
+def remove_lowest_candidates_from_live_count(live_vote_count):
+    pass  
+
+
+winners = []  
+def current_round():
+     return Round(1, check_for_winner(droop_quota, live_vote_count))
+
+
+ 
+
+if check_for_winner(droop_quota, live_vote_count):
+    
+    for winner in winners:
+        get_surplus_votes(droop_quota, live_vote_count) 
+        remove_candidate_from_live_count(winner, live_vote_count)
+        resdistribute_surplus_votes(winner, live_vote_count, ballots_cleaned, droop_quota)
+        
+        add_candidate_to_winners_list(winner, winners)
+    print("Winners:", check_for_winner(droop_quota, live_vote_count))
+else:
+    print("No winners yet, removing candidates with lowest votes and redistributing surplus votes.")
+    find_lowest_candidates(live_vote_count)
+    redistribute_lowest_candidate_votes(live_vote_count, ballots_cleaned)
+    remove_lowest_candidates_from_live_count(live_vote_count)
+
+
+
+
+
+    
+
+print("Winners:", check_for_winner(get_droop_quota(get_individual_ballot_count()), live_vote_count))
+
+def get_surplus_votes(droop_quota, live_vote_count):
+    surplus_votes = {}
+    for candidate in live_vote_count:
+        if live_vote_count[candidate] > droop_quota:
+            surplus_votes[candidate] = live_vote_count[candidate] - droop_quota
+    return surplus_votes
+
+def get_lowest_candidates(live_vote_count):
+    lowest_vote_count = min(live_vote_count.values())
+    lowest_candidates = []
+    for candidate in live_vote_count:
+        if live_vote_count[candidate] == lowest_vote_count:
+            lowest_candidates.append(candidate)
+    return lowest_candidates
 
