@@ -1,3 +1,4 @@
+bidict==0.23.1
 cachetools==6.2.4
 certifi==2025.11.12
 charset-normalizer==3.4.4
