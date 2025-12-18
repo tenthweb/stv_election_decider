@@ -4,6 +4,8 @@
 '''the below code was taken with minor alterations from the 
 Love Sandwiches project code'''
 
+from bidict import bidict
+
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -22,16 +24,50 @@ candidate_worksheet = SHEET.worksheet('Candidates')
 ballots = SHEET.worksheet('Ballots')
 # ballots_raw = ballots.get_all_values()
 
-'''We assume candidates have been given an ID by the ballot-setters and continue to use that one'''
+'''We assume candidates have been given an ID by the ballot-setters an
+ continue to use that one'''
 
 '''For test ballot sets, we could create a list of candidates and give them an ID by alphabetising them
 
 We don't want the candidate data to be changed, e.g. a user sneaking themselves onto the list!
 '''
 
+'''TODO check candidate data for invalid data, e.g. non-natural number for ID, duplicate IDs, duplicate. Skipped numbers ARE valid; candidates may have been disqualified after getting on the list.'''
+
 CANDIDATE_DATA =(candidate_worksheet.get_all_values())
 
-CANDIDATE_NAMES = [CANDIDATE_DATA[i][0] for i in range(len(CANDIDATE_DATA))]
+CANDIDATE_NAMES_AND_IDS = bidict(CANDIDATE_DATA)
 
-live_vote_table = {candidate for candidate in CANDIDATE_NAMES}
-print(CANDIDATE_NAMES)
+
+
+'''Ballot area'''
+
+BALLOTS_RAW = ballots.get_all_values()
+
+#print(BALLOTS_RAW)
+
+ballots_cleaned = []
+
+current_ballot = []
+
+
+for line in BALLOTS_RAW:
+    
+    if line == ['', ''] or line == []:
+        ballots_cleaned.append(current_ballot)
+
+    if line == ['', '']:    
+        current_ballot = []
+
+    else:
+        current_ballot.append(line)
+        
+print(ballots_cleaned)
+
+
+live_vote_count = {CANDIDATE_NAMES_AND_IDS[candidate]:0 for candidate in CANDIDATE_NAMES_AND_IDS}
+
+print("Current live_vote_count:")
+for value, key in live_vote_count.items():
+    print(f"{value}: {key}")
+
