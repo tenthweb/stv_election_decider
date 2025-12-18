@@ -14,9 +14,10 @@ from google.oauth2.service_account import Credentials
 '''classes for ballots and candidates will go here'''
 
 class Election:
-    def __init__(self, candidates, ballots):
+    def __init__(self, candidates, ballots, seats=1):
         self.candidates = candidates
         self.ballots = ballots
+        self.seats = seats
 
         '''We need a list of Round objects'''
 
@@ -30,8 +31,23 @@ class Election:
     def get_candidates(self):
         return self.candidates
     
+    def get_candidate_count(self):
+        return len(self.candidates)
+    
     def get_ballots(self):
         return self.ballots
+    
+    def get_ballot_count(self):
+        return len(self.ballots)
+    
+    def get_seats_count(self):
+        return self.seats
+    
+    def get_droop_quota(self):
+        ballot_count = len(self.ballots)
+        candidate_count = len(self.candidates)
+        droop_quota = (ballot_count / (self.seats + 1))
+        return droop_quota
     
     def initialise__new_round(self, previous_round_number, previous_vote_count):
         round_number = previous_round_number + 1
@@ -68,15 +84,14 @@ class Round:
             
         return vote_count
 
-    def check_for_winners(self, droop_quota, live_vote_count):
-        for candidate in live_vote_count:
-            if live_vote_count[candidate] >= droop_quota:
+    def check_for_winners(self, droop_quota, current_vote_count):
+        for candidate in current_vote_count:
+            if current_vote_count[candidate] >= droop_quota:
                 self.winners.append(candidate)
         return self.winners
         
 
       
-
 
 
 
@@ -266,6 +281,6 @@ def get_lowest_candidates(live_vote_count):
 
 '''Test the logic just for the first round of counting'''
 
-print(current_election.rounds[0].count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned))
-
+#print(current_election.rounds[0].count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned))
+print(f"With {current_election.get_seats_count()} seats and {current_election.get_ballot_count()} ballots, the droop quota is {current_election.get_droop_quota()}.")
     
