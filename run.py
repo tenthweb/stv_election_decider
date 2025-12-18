@@ -13,19 +13,45 @@ from google.oauth2.service_account import Credentials
 '''classes for ballots and candidates will go here'''
 
 class Election:
-    def __init__(self, candidates, ballots, rounds):
+    def __init__(self, candidates, ballots):
         self.candidates = candidates
         self.ballots = ballots
-        self.rounds = rounds
 
-    def add_round(self, round):
-        self.rounds.append(round)
+        '''We need a list of Round objects'''
+
+        self.rounds = [Round(1, None)]
+
+        self.current_round = self.rounds[-1]
+        self.current_round_number = self.current_round.round_number
+
+        self.current_counts = {candidate: 0 for candidate in candidates}
+
+
+
+
+        
+
+
+    def initialise__new_round(self, previous_round_number, previous_vote_count):
+        round_number = previous_round_number + 1
+        new_round = Round(round_number, previous_vote_count)
+        self.rounds.append(new_round)
+        return new_round
+    
+    def get_current_round(self):
+        return self.current_round
+    
+    
 
 
 class Round:
-    def __init__(self, round_number, winners):
+    def __init__(self, round_number, previous_vote_count):
         self.round_number = round_number
-        self.winners = winners
+        self.previous_vote_count = previous_vote_count
+        self.winners = []
+        
+
+      
 
 
 
@@ -66,14 +92,14 @@ CANDIDATE_NAMES_AND_IDS = bidict(CANDIDATE_DATA)
 
 CANDIDATE_NUMBER = len(CANDIDATE_NAMES_AND_IDS)
 
-current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots, [])
-
 
 '''Ballot area'''
 
 BALLOTS_RAW = ballots.get_all_values()
 
 #print(BALLOTS_RAW)
+
+
 
 
 current_ballot = []
@@ -97,6 +123,14 @@ print(ballots_cleaned)
 '''The ballots_cleaned variable is a list of ballots. Each ballot is a list of 
 lists, representing candidate name and preference number.'''
 '''TODO make ballots into objects'''
+
+current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots_cleaned)
+
+print(current_election.candidates)
+print(current_election.ballots)
+print(current_election.rounds)
+print(".current_round_number:", current_election.current_round_number)
+
 
 
 live_vote_count = {CANDIDATE_NAMES_AND_IDS[candidate]:0 for candidate in CANDIDATE_NAMES_AND_IDS}
