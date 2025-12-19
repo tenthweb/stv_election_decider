@@ -111,5 +111,5 @@ From these inputs, the program generates a complete election dataset, including 
 - Business logic and STV algorithm inspired by various online resources on Single Transferable Vote systems, including the [Wikipedia page on STV](https://en.wikipedia.org/wiki/Single_transferable_vote) and the [Irish electoral commission](https://www.electoralcommission.ie/irelands-voting-system/).
 - Hosted on Heroku using Code Institute's mock terminal environment, using their provided template and deployment instructions.
 - Some unused code was adapted from Code Institute's Love Sandwiches project.
-- The code was produced in VScode. Autocompletion and linting were provided by the Pylance extension, as well as boilerplate code, e.g. autocompleting syntax for variable names, loops and functions, and autocorrecting indentation.
+- The code was produced in VScode. Autocompletion and linting were provided by the Pylance extension, as well as boilerplate code, e.g. autocompleting syntax for variable names, loops, and functions, and autocorrecting indentation.
 - ChatGPT was used to help brainstorm features and future improvements, as well as to help debug some issues with the initial implementation of the STV algorithm.

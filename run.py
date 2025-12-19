@@ -111,6 +111,16 @@ def stv(ballots, seats):
 
 
 def run_cli():
+
+    # welcome message
+    print("Single Transferable Vote (STV) Election Simulator")
+    print("=" * 50)
+    print("This simulator allows you to run an STV election with random "
+          "ballots.")
+    print("Please provide the candidate names, number of seats, and number "
+          "of ballots.")
+    print("=" * 50)
+
     # Get candidates from user
     candidates_input = input("Enter candidate names, separated by commas: ")
     candidates = [c.strip() for c in candidates_input.split(",")]
@@ -135,4 +145,3 @@ def run_cli():
 
 if __name__ == "__main__":
     run_cli()
-    
