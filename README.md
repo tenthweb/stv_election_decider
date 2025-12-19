@@ -16,7 +16,7 @@ This program is intended to be:
 
 - Suitable for simulations demonstrations, coursework
 
-[Here is the live version link](https://stv_election_simulator.herokuapp.com/)
+[Here is the live version link](https://stv-election-decider-62ae6b2270ea.herokuapp.com/)
 
 ## Features
 
