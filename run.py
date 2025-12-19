@@ -135,7 +135,7 @@ ballots_test = [
  {'Alice': 2, 'Bob': 3, 'Carol': 4, 'Dave': 5, 'Eve': 1},
  {'Alice': 2, 'Bob': 3, 'Carol': 1, 'Dave': 4, 'Eve': 5}]
 
-def stv(ballots, seats):
+def get_stv_results(ballots, seats):
     # Convert ballots to (ordered_preferences, weight)
     weighted_ballots = []
     for ballot in ballots:
@@ -340,8 +340,6 @@ for ballot in ballots_cleaned:
         ballots_dicts.append(ballot_dict)
 
 
-print(stv(ballots_dicts, seat_number))
-
 from random import shuffle
 
 def cli_generate_election():
@@ -376,4 +374,8 @@ def cli_generate_election():
 
     return candidates, seats, ballots
 
-print(cli_generate_election())
+
+
+candidates, seats, ballots = cli_generate_election()
+
+print(get_stv_results(ballots, seats))
