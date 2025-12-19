@@ -325,9 +325,22 @@ for line in BALLOTS_RAW:
         
 #print(ballots_cleaned)
 
+ballots_dicts = []
+
+for ballot in ballots_cleaned:
+    if not ballot:
+        continue
+
+    ballot_dict = {}
+    for row in ballot:
+        if len(row) >= 2 and row[0] and row[1]:
+            ballot_dict[row[0]] = int(row[1])
+
+    if ballot_dict:
+        ballots_dicts.append(ballot_dict)
 
 
-print(stv(ballots_cleaned, seat_number))
+print(stv(ballots_dicts, seat_number))
 
 
 
