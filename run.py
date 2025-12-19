@@ -1,5 +1,6 @@
 from random import shuffle
 
+
 def stv(ballots, seats):
     # Convert ballots to (ordered_preferences, weight)
     weighted_ballots = []
@@ -134,3 +135,4 @@ def run_cli():
 
 if __name__ == "__main__":
     run_cli()
+    
