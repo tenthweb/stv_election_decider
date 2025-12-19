@@ -1,6 +1,4 @@
-# Your code goes here.
-# You can delete these comments, but do not change the name of this file
-# Write your code to expect a terminal of 80 characters wide and 24 rows high
+
 '''the below code was taken with minor alterations from the 
 Love Sandwiches project code'''
 
@@ -11,229 +9,259 @@ from bidict import bidict
 import gspread
 from google.oauth2.service_account import Credentials
 
+'''end of Love Sandwiches code'''
 
-'''classes for ballots and candidates will go here'''
+from random import shuffle
 
-class Election:
-    def __init__(self, candidates, ballots, seats=1):
-        self.candidates = candidates
-        self.ballots = ballots
-        self.seats = seats
-        self.elected = []
-        self.quota = self.get_droop_quota()
+seat_number = 3
 
-        '''We need a list of Round objects for each round of vote counting'''
+candidates = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve']
 
-        self.rounds = []
+total_candidates = len(candidates)
 
-        self.current_round = self.initialise_first_round()
-        self.current_round_number = self.current_round.round_number
-
-        self.current_counts = {candidate: 0 for candidate in candidates}
-
-    def run_election(self):
-        while len(self.elected) < self.seats:
-            round = Round(self.current_round_no, self.current_vote_count)
-
-            if self.current_round_no == 1:
-                round.count_first_preferences(self.ballots)
-
-            winners = round.find_winners(self.quota)
-
-            if winners:
-                for winner in winners:
-                    round.redistribute_surplus(winner, self.ballots, self.quota)
-                    self.elected.append(winner)
-            else:
-                lowest = self.find_lowest(round.vote_count)
-                round.eliminate(lowest, self.ballots)
-
-            self.current_vote_count = round.vote_count
-            self.rounds.append(round)
-            self.current_round_no += 1
-
-    def get_candidates(self):
-        return self.candidates
-    
-    def get_candidate_count(self):
-        return len(self.candidates)
-    
-    def get_ballots(self):
-        return self.ballots
-    
-    def get_ballot_count(self):
-        return len(self.ballots)
-    
-    def get_seats_count(self):
-        return self.seats
-    
-    '''Using the 1/(seats+1) formula for Droop quota without using
-    other variations, such as adding 1 or using floor or ceiling functions.
-    We're using "strictly greater than the quota" as the criterion for
-    winning, and allowing fractions of votes for surplus distribution,
-    so this is acceptable.'''
-
-    def get_droop_quota(self):
-        ballot_count = len(self.ballots)
-        candidate_count = len(self.candidates)
-        droop_quota = (ballot_count / (self.seats + 1))
-        return droop_quota
-    
-    def initialise_vote_count(self):
-        self.current_counts = {candidate: 0 for candidate in self.candidates.inverse}
-        return self.current_counts
-    
-    def initialise_first_round(self):
-        first_round = Round(1, {candidate: 0 for candidate in self.candidates.inverse})
-        self.rounds.append(first_round)
-        return first_round
-
-    def initialise__new_round(self, previous_round_number, previous_vote_count):
-        round_number = previous_round_number + 1
-        new_round = Round(round_number, previous_vote_count)
-        self.rounds.append(new_round)
-        return new_round
-    
-    def count_first_preferences(self, ballots):
-        for ballot in ballots:
-            first = ballot.get_first_preference()
-            self.vote_count[first] += 1
-    
-    def find_winners(self, quota):
-        self.winners = [ 
-            c for c, v in self.vote_count.items()
-            if v >= quota
-        ]
-        return self.winners
-
-class Round:
-
-    def __init__(self, round_number, vote_count):
-        self.round_number = round_number
-        self.vote_count = vote_count.copy()
-        self.winners = []
-        self.eliminated = []
-
-
-    def count_first_preferences(self, ballots):
-        '''Counts first preference votes from the ballots and updates the vote_count dictionary.'''
-        for ballot in ballots:
-            first = ballot.get_first_preference()
-            self.vote_count[first] += 1
-
-    def find_winners(self, droop_quota):
-        '''Finds candidates who have reached or exceeded the droop quota and adds them to the winners list.'''
-        self.winners = [ 
-            c for c, v in self.vote_count.items()
-            if v >= droop_quota
-        ]
-        return self.winners 
-    
-    def eliminate(self, lowest_candidates, ballots):
-        '''Eliminates the candidates with the lowest votes and redistributes their votes.'''
-        for candidate in lowest_candidates:
-            self.eliminated.append(candidate)
-            del self.vote_count[candidate]
-        
-        # Redistribute votes of eliminated candidates
-        for ballot in ballots:
-            first = ballot.get_first_preference()
-            if first in lowest_candidates:
-                next_preference = ballot.get_next_preference(exclude=self.eliminated)
-                if next_preference:
-                    self.vote_count[next_preference] += 1
-
+'''Generate 100 random ballots for 5 candidates'''
 
 '''
+ballots = []
 
+for i in range(100):
+    preferences = list(range(1, len (candidates) + 1))
+    shuffle(preferences)
+    ballot = {candidates[j]: preferences[j] for j in range(len(candidates))}
+    ballots.append(ballot)
 
-    def run_round(self):
-        self.count_votes(self.current_vote_count, ballots)
-        self.check_for_winners(self.droop_quota, self.current_vote_count)
-        if self.winners:
-            for winner in self.winners:
-                self.redistribute_winner_votes(winner,self.current_vote_count, self.ballots, self.droop_quota)
-        else:
-            self.redistribute_lowest_votes
+print(ballots)
+'''
 
-        return self.current_vote_count
+ballots_test = [
+{'Alice': 1, 'Bob': 2, 'Carol': 4, 'Dave': 5, 'Eve': 3},
+ {'Alice': 4, 'Bob': 1, 'Carol': 2, 'Dave': 5, 'Eve': 3},
+ {'Alice': 4, 'Bob': 1, 'Carol': 5, 'Dave': 2, 'Eve': 3},
+ {'Alice': 5, 'Bob': 1, 'Carol': 4, 'Dave': 3, 'Eve': 2},
+ {'Alice': 1, 'Bob': 5, 'Carol': 2, 'Dave': 4, 'Eve': 3},
+ {'Alice': 4, 'Bob': 1, 'Carol': 2, 'Dave': 3, 'Eve': 5},
+ {'Alice': 1, 'Bob': 2, 'Carol': 5, 'Dave': 4, 'Eve': 3},
+ {'Alice': 3, 'Bob': 5, 'Carol': 2, 'Dave': 4, 'Eve': 1},
+ {'Alice': 2, 'Bob': 4, 'Carol': 5, 'Dave': 3, 'Eve': 1},
+ {'Alice': 1, 'Bob': 2, 'Carol': 3, 'Dave': 5, 'Eve': 4},
+ {'Alice': 3, 'Bob': 4, 'Carol': 1, 'Dave': 5, 'Eve': 2},
+ {'Alice': 5, 'Bob': 2, 'Carol': 3, 'Dave': 4, 'Eve': 1},
+ {'Alice': 1, 'Bob': 5, 'Carol': 2, 'Dave': 3, 'Eve': 4},
+ {'Alice': 5, 'Bob': 3, 'Carol': 1, 'Dave': 2, 'Eve': 4},
+ {'Alice': 4, 'Bob': 2, 'Carol': 5, 'Dave': 1, 'Eve': 3},
+ {'Alice': 2, 'Bob': 4, 'Carol': 5, 'Dave': 3, 'Eve': 1},
+ {'Alice': 3, 'Bob': 5, 'Carol': 2, 'Dave': 1, 'Eve': 4},
+ {'Alice': 4, 'Bob': 1, 'Carol': 3, 'Dave': 2, 'Eve': 5},
+ {'Alice': 5, 'Bob': 3, 'Carol': 2, 'Dave': 4, 'Eve': 1},
+ {'Alice': 3, 'Bob': 5, 'Carol': 1, 'Dave': 2, 'Eve': 4},
+ {'Alice': 5, 'Bob': 3, 'Carol': 2, 'Dave': 4, 'Eve': 1},
+ {'Alice': 2, 'Bob': 5, 'Carol': 3, 'Dave': 1, 'Eve': 4},
+ {'Alice': 4, 'Bob': 1, 'Carol': 5, 'Dave': 2, 'Eve': 3},
+ {'Alice': 2, 'Bob': 3, 'Carol': 4, 'Dave': 5, 'Eve': 1},
+ {'Alice': 2, 'Bob': 5, 'Carol': 1, 'Dave': 3, 'Eve': 4},
+ {'Alice': 1, 'Bob': 3, 'Carol': 4, 'Dave': 2, 'Eve': 5},
+ {'Alice': 2, 'Bob': 4, 'Carol': 5, 'Dave': 3, 'Eve': 1},
+ {'Alice': 1, 'Bob': 3, 'Carol': 4, 'Dave': 2, 'Eve': 5},
+ {'Alice': 2, 'Bob': 3, 'Carol': 4, 'Dave': 5, 'Eve': 1},
+ {'Alice': 3, 'Bob': 5, 'Carol': 2, 'Dave': 1, 'Eve': 4},
+ {'Alice': 2, 'Bob': 4, 'Carol': 1, 'Dave': 3, 'Eve': 5},
+ {'Alice': 4, 'Bob': 2, 'Carol': 5, 'Dave': 1, 'Eve': 3},
+ {'Alice': 2, 'Bob': 5, 'Carol': 3, 'Dave': 1, 'Eve': 4},
+ {'Alice': 1, 'Bob': 2, 'Carol': 5, 'Dave': 4, 'Eve': 3},
+ {'Alice': 4, 'Bob': 1, 'Carol': 5, 'Dave': 3, 'Eve': 2},
+ {'Alice': 3, 'Bob': 5, 'Carol': 1, 'Dave': 2, 'Eve': 4},
+ {'Alice': 4, 'Bob': 1, 'Carol': 2, 'Dave': 3, 'Eve': 5},
+ {'Alice': 2, 'Bob': 5, 'Carol': 3, 'Dave': 1, 'Eve': 4},
+ {'Alice': 1, 'Bob': 3, 'Carol': 4, 'Dave': 2, 'Eve': 5},
+ {'Alice': 1, 'Bob': 4, 'Carol': 3, 'Dave': 2, 'Eve': 5},
+ {'Alice': 4, 'Bob': 5, 'Carol': 1, 'Dave': 3, 'Eve': 2},
+ {'Alice': 1, 'Bob': 4, 'Carol': 2, 'Dave': 3, 'Eve': 5},
+ {'Alice': 3, 'Bob': 1, 'Carol': 5, 'Dave': 4, 'Eve': 2},
+ {'Alice': 5, 'Bob': 1, 'Carol': 4, 'Dave': 2, 'Eve': 3},
+ {'Alice': 2, 'Bob': 3, 'Carol': 5, 'Dave': 4, 'Eve': 1},
+ {'Alice': 5, 'Bob': 2, 'Carol': 3, 'Dave': 4, 'Eve': 1},
+ {'Alice': 5, 'Bob': 1, 'Carol': 3, 'Dave': 4, 'Eve': 2},
+ {'Alice': 3, 'Bob': 5, 'Carol': 4, 'Dave': 1, 'Eve': 2},
+ {'Alice': 3, 'Bob': 4, 'Carol': 2, 'Dave': 5, 'Eve': 1},
+ {'Alice': 2, 'Bob': 5, 'Carol': 3, 'Dave': 4, 'Eve': 1},
+ {'Alice': 2, 'Bob': 5, 'Carol': 4, 'Dave': 1, 'Eve': 3},
+ {'Alice': 3, 'Bob': 2, 'Carol': 5, 'Dave': 1, 'Eve': 4},
+ {'Alice': 1, 'Bob': 3, 'Carol': 5, 'Dave': 4, 'Eve': 2},
+ {'Alice': 2, 'Bob': 1, 'Carol': 5, 'Dave': 4, 'Eve': 3},
+ {'Alice': 1, 'Bob': 5, 'Carol': 4, 'Dave': 2, 'Eve': 3},
+ {'Alice': 2, 'Bob': 4, 'Carol': 1, 'Dave': 3, 'Eve': 5},
+ {'Alice': 1, 'Bob': 5, 'Carol': 2, 'Dave': 4, 'Eve': 3},
+ {'Alice': 1, 'Bob': 4, 'Carol': 5, 'Dave': 2, 'Eve': 3},
+ {'Alice': 4, 'Bob': 3, 'Carol': 5, 'Dave': 2, 'Eve': 1},
+ {'Alice': 5, 'Bob': 2, 'Carol': 3, 'Dave': 1, 'Eve': 4},
+ {'Alice': 5, 'Bob': 4, 'Carol': 1, 'Dave': 3, 'Eve': 2},
+ {'Alice': 1, 'Bob': 2, 'Carol': 3, 'Dave': 5, 'Eve': 4},
+ {'Alice': 4, 'Bob': 1, 'Carol': 3, 'Dave': 2, 'Eve': 5},
+ {'Alice': 4, 'Bob': 1, 'Carol': 5, 'Dave': 3, 'Eve': 2},
+ {'Alice': 2, 'Bob': 4, 'Carol': 3, 'Dave': 1, 'Eve': 5},
+ {'Alice': 3, 'Bob': 5, 'Carol': 1, 'Dave': 2, 'Eve': 4},
+ {'Alice': 4, 'Bob': 5, 'Carol': 1, 'Dave': 3, 'Eve': 2},
+ {'Alice': 2, 'Bob': 4, 'Carol': 5, 'Dave': 1, 'Eve': 3},
+ {'Alice': 2, 'Bob': 3, 'Carol': 5, 'Dave': 1, 'Eve': 4},
+ {'Alice': 3, 'Bob': 2, 'Carol': 4, 'Dave': 1, 'Eve': 5},
+ {'Alice': 1, 'Bob': 2, 'Carol': 5, 'Dave': 3, 'Eve': 4},
+ {'Alice': 1, 'Bob': 2, 'Carol': 3, 'Dave': 5, 'Eve': 4},
+ {'Alice': 4, 'Bob': 5, 'Carol': 2, 'Dave': 1, 'Eve': 3},
+ {'Alice': 5, 'Bob': 2, 'Carol': 3, 'Dave': 4, 'Eve': 1},
+ {'Alice': 1, 'Bob': 2, 'Carol': 4, 'Dave': 3, 'Eve': 5},
+ {'Alice': 1, 'Bob': 5, 'Carol': 3, 'Dave': 4, 'Eve': 2},
+ {'Alice': 4, 'Bob': 3, 'Carol': 1, 'Dave': 5, 'Eve': 2},
+ {'Alice': 3, 'Bob': 4, 'Carol': 5, 'Dave': 2, 'Eve': 1},
+ {'Alice': 3, 'Bob': 4, 'Carol': 1, 'Dave': 2, 'Eve': 5},
+ {'Alice': 2, 'Bob': 4, 'Carol': 5, 'Dave': 1, 'Eve': 3},
+ {'Alice': 5, 'Bob': 3, 'Carol': 4, 'Dave': 2, 'Eve': 1},
+ {'Alice': 3, 'Bob': 5, 'Carol': 2, 'Dave': 1, 'Eve': 4},
+ {'Alice': 1, 'Bob': 5, 'Carol': 4, 'Dave': 3, 'Eve': 2},
+ {'Alice': 5, 'Bob': 2, 'Carol': 4, 'Dave': 3, 'Eve': 1},
+ {'Alice': 4, 'Bob': 1, 'Carol': 5, 'Dave': 3, 'Eve': 2},
+ {'Alice': 5, 'Bob': 3, 'Carol': 1, 'Dave': 4, 'Eve': 2},
+ {'Alice': 3, 'Bob': 2, 'Carol': 5, 'Dave': 1, 'Eve': 4},
+ {'Alice': 1, 'Bob': 5, 'Carol': 4, 'Dave': 3, 'Eve': 2},
+ {'Alice': 5, 'Bob': 1, 'Carol': 4, 'Dave': 2, 'Eve': 3},
+ {'Alice': 1, 'Bob': 4, 'Carol': 2, 'Dave': 3, 'Eve': 5},
+ {'Alice': 5, 'Bob': 1, 'Carol': 2, 'Dave': 4, 'Eve': 3},
+ {'Alice': 3, 'Bob': 5, 'Carol': 1, 'Dave': 2, 'Eve': 4},
+ {'Alice': 1, 'Bob': 3, 'Carol': 4, 'Dave': 5, 'Eve': 2},
+ {'Alice': 3, 'Bob': 1, 'Carol': 5, 'Dave': 2, 'Eve': 4},
+ {'Alice': 5, 'Bob': 3, 'Carol': 4, 'Dave': 2, 'Eve': 1},
+ {'Alice': 4, 'Bob': 2, 'Carol': 1, 'Dave': 3, 'Eve': 5},
+ {'Alice': 3, 'Bob': 4, 'Carol': 1, 'Dave': 5, 'Eve': 2},
+ {'Alice': 2, 'Bob': 1, 'Carol': 5, 'Dave': 3, 'Eve': 4},
+ {'Alice': 2, 'Bob': 3, 'Carol': 4, 'Dave': 5, 'Eve': 1},
+ {'Alice': 2, 'Bob': 3, 'Carol': 1, 'Dave': 4, 'Eve': 5}]
 
+def stv(ballots, seats):
+    # Convert ballots to (ordered_preferences, weight)
+    weighted_ballots = []
+    for ballot in ballots:
+        prefs = tuple(
+            c for c, r in sorted(ballot.items(), key=lambda x: x[1])
+        )
+        weighted_ballots.append([prefs, 1.0])
 
+    # Collect all candidates
+    candidates = set()
+    for prefs, _ in weighted_ballots:
+        for c in prefs:
+            candidates.add(c)
 
+    elected = []
+    eliminated = set()
 
-    def count_votes(self, current_vote_count, ballots):
-        
-        print("Vote count initialized:", self.current_vote_count)
-        # print(self.previous_vote_count)
-        if self.round_number == 1:
-            for ballot in ballots:
-                for line in ballot:
-                    if line[1] == '1':
-                        candidate_name = line[0]
-                        self.current_vote_count[candidate_name] += 1
-            vote_count = self.current_vote_count
-        else:
-            vote_count = self.previous_vote_count
+    total_votes = len(weighted_ballots)
+    quota = total_votes // (seats + 1) + 1
 
-            
-        return vote_count
+    round_num = 1
 
-    def check_for_winners(self, droop_quota, current_vote_count):
-        for candidate in current_vote_count:
-            if current_vote_count[candidate] >= droop_quota:
-                self.winners.append(candidate)
-        print(f"Winners found: {self.winners}")
-        return self.winners
-    
-    def redistribute_winner_votes(self, candidate, current_vote_count, ballots, droop_quota):
-            surplus_votes = current_vote_count[candidate] - droop_quota
-            print(f"Redistributing surplus votes for {candidate}, surplus votes: {surplus_votes}")
-            next_preference_votes = {next_preference_candidate: 0  for next_preference_candidate in current_vote_count if next_preference_candidate != candidate}
-            for ballot in ballots:
-                for line in ballot:
-                    if line[1] == '1' and line[0] == candidate:
-                        # Find the next preference on this ballot
-                        for next_line in ballot:
-                            if next_line[1] == '2':
-                                next_candidate = next_line[0]
-                                next_preference_votes[next_candidate] += 1
+    def tally():
+        counts = {}
+        for prefs, weight in weighted_ballots:
+            for c in prefs:
+                if c not in elected and c not in eliminated:
+                    counts[c] = counts.get(c, 0.0) + weight
+                    break
+        return counts
 
-            print(f"Next preference votes: {next_preference_votes}")
-            next_preference_votes_total = sum(next_preference_votes.values())
-            print(f"Total next preference votes: {next_preference_votes_total}")
-            for next_candidate in next_preference_votes:
-                if next_preference_votes_total > 0:
-                    transfer_value = (next_preference_votes[next_candidate] / next_preference_votes_total) * surplus_votes
+    print(f"Total votes: {total_votes}")
+    print(f"Seats: {seats}")
+    print(f"Droop quota: {quota}")
+    print("-" * 40)
+
+    while len(elected) < seats:
+        print(f"\nROUND {round_num}")
+        counts = tally()
+
+        if not counts:
+            print("\nNo votes remaining to transfer.")
+            remaining = candidates - set(elected) - eliminated
+            for c in sorted(remaining):
+                print(f"ELECTED: {c}")
+                elected.append(c)
+            break
+
+        # Print tallies
+        for c in sorted(counts):
+            print(f"{c:>6}: {counts[c]:.3f}")
+
+        # Check for winner
+        winner = None
+        for c in counts:
+            if counts[c] >= quota:
+                winner = c
+                break
+
+        if winner is not None:
+            print(f"\nELECTED: {winner}")
+            elected.append(winner)
+
+            total = counts[winner]
+            surplus = total - quota
+            print(f"Surplus: {surplus:.3f}")
+
+            transfer_fraction = surplus / total if surplus > 0 else 0.0
+            print(f"Transfer fraction: {transfer_fraction:.6f}")
+
+            new_ballots = []
+            for prefs, weight in weighted_ballots:
+                if prefs and prefs[0] == winner:
+                    transferred = weight * transfer_fraction
+                    remaining = weight - transferred
+
+                    if remaining > 0:
+                        new_ballots.append([prefs, remaining])
+
+                    if transferred > 0:
+                        new_prefs = tuple(p for p in prefs if p != winner)
+                        if new_prefs:
+                            new_ballots.append([new_prefs, transferred])
                 else:
-                    transfer_value = 0
-                current_vote_count[next_candidate] += transfer_value
-                print(f"Transferring {transfer_value} votes to {next_candidate}")
+                    new_ballots.append([prefs, weight])
 
-    def redistribute_lowest_votes(self, candidate, current_vote_count, ballots):
-       
-       
-       All votes for the candidate(s) with the lowest votes are redistributed
-       
-       
-        surplus_votes = self.current_vote_count[candidate]
-        print(f"Redistributing votes for lowest candidate {candidate}, votes to redistribute: {surplus_votes}")
-        next_preference_votes = {next_preference_candidate: 0  for next_preference_candidate in current_vote_count if next_preference_candidate != candidate}
-        for ballot in ballots:
-            for line in ballot:
-                if line[1] == '1' and line[0] == candidate:
-                    # Find the next preference on this ballot
-                    for next_line in ballot:
-                        if next_line[1] == '2':
-                            next_candidate = next_line[0]
-                            next_preference_votes[next_candidate] += 1
+            weighted_ballots = new_ballots
+            round_num += 1
+            continue
 
-'''
+        # Eliminate lowest candidate
+        lowest = None
+        lowest_votes = None
+        for c, v in counts.items():
+            if lowest is None or v < lowest_votes:
+                lowest = c
+                lowest_votes = v
 
-# Google Sheets setup code below
-    
+        print(f"\nELIMINATED: {lowest} ({lowest_votes:.3f} votes)")
+        eliminated.add(lowest)
 
-        
+        new_ballots = []
+        for prefs, weight in weighted_ballots:
+            new_prefs = tuple(p for p in prefs if p != lowest)
+            if new_prefs:
+                new_ballots.append([new_prefs, weight])
 
+        weighted_ballots = new_ballots
+
+        # Early termination
+        remaining = candidates - set(elected) - eliminated
+        if len(remaining) + len(elected) <= seats:
+            print("\nRemaining candidates equal remaining seats.")
+            for c in sorted(remaining):
+                print(f"ELECTED: {c}")
+                elected.append(c)
+            break
+
+        round_num += 1
+
+    print("\nFINAL RESULT")
+    print("=" * 40)
+    for i, c in enumerate(elected, 1):
+        print(f"Seat {i}: {c}")
+
+    return elected
 
 
 
@@ -279,8 +307,6 @@ BALLOTS_RAW = ballots.get_all_values()
 #print(BALLOTS_RAW)
 
 
-
-
 current_ballot = []
 
 ballots_cleaned = [current_ballot]
@@ -299,117 +325,9 @@ for line in BALLOTS_RAW:
         
 #print(ballots_cleaned)
 
-'''The ballots_cleaned variable is a list of ballots. Each ballot is a list of 
-lists, representing candidate name and preference number.'''
-'''TODO make ballots into objects'''
+
+
+print(stv(ballots_cleaned, seat_number))
 
 
 
-current_election = Election(CANDIDATE_NAMES_AND_IDS, ballots_cleaned, 4)
-
-
-
-
-
-
-'''Iterate through ballots, getting each ballot's first preference and adding one to that candidate's live vote count'''
-
-def get_individual_ballot_count():
-    ballot_count = len(ballots_cleaned) 
-    return ballot_count
-
-#print(f"Total number of ballots: {get_individual_ballot_count()}")
-
-
-def check_for_winner(droop_quota, live_vote_count):
-    winners = []
-    for candidate in live_vote_count:
-        if live_vote_count[candidate] >= droop_quota:
-            winners.append(candidate)
-    return winners
-
-    
-
-def get_surplus_votes(droop_quota, live_vote_count):
-    pass
-
-def remove_candidate_from_live_count(winner, live_vote_count):
-    pass
-
-def resdistribute_surplus_votes(winner, live_vote_count, ballots_cleaned, droop_quota):
-    pass
-
-def add_candidate_to_winners_list(winner, winners):
-    pass
-
-def find_lowest_candidates(live_vote_count):
-    pass
-
-def redistribute_lowest_candidate_votes(live_vote_count, ballots_cleaned):
-    pass
-
-def remove_lowest_candidates_from_live_count(live_vote_count):
-    pass  
-
-
-winners = []  
-def current_round():
-     return Round(1, check_for_winner(droop_quota, live_vote_count))
-
-
- 
-'''
-if check_for_winner(droop_quota, live_vote_count):
-    
-    for winner in winners:
-        get_surplus_votes(droop_quota, live_vote_count) 
-        remove_candidate_from_live_count(winner, live_vote_count)
-        resdistribute_surplus_votes(winner, live_vote_count, ballots_cleaned, droop_quota)
-        
-        add_candidate_to_winners_list(winner, winners)
-    print("Winners:", check_for_winner(droop_quota, live_vote_count))
-else:
-    print("No winners yet, removing candidates with lowest votes and redistributing surplus votes.")
-    find_lowest_candidates(live_vote_count)
-    redistribute_lowest_candidate_votes(live_vote_count, ballots_cleaned)
-    remove_lowest_candidates_from_live_count(live_vote_count)
-
-
-
-
-
-    
-
-print("Winners:", check_for_winner(get_droop_quota(get_individual_ballot_count()), live_vote_count))
-'''
-def get_surplus_votes(droop_quota, live_vote_count):
-    surplus_votes = {}
-    for candidate in live_vote_count:
-        if live_vote_count[candidate] > droop_quota:
-            surplus_votes[candidate] = live_vote_count[candidate] - droop_quota
-    return surplus_votes
-
-def get_lowest_candidates(live_vote_count):
-    lowest_vote_count = min(live_vote_count.values())
-    lowest_candidates = []
-    for candidate in live_vote_count:
-        if live_vote_count[candidate] == lowest_vote_count:
-            lowest_candidates.append(candidate)
-    return lowest_candidates
-
-
-
-'''Test the logic just for the first round of counting'''
-
-#print(current_election.rounds[0].count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned))
-print(f"With {current_election.get_seats_count()} seats and {current_election.get_ballot_count()} ballots, the droop quota is {current_election.get_droop_quota()}.")
-
-test_current_election_round_count = current_election.current_round.count_votes(CANDIDATE_NAMES_AND_IDS,ballots_cleaned)
-print(f"round 1 vote count: {test_current_election_round_count}")
-print(f"round 1 winners: {current_election.current_round.check_for_winners(current_election.get_droop_quota(), test_current_election_round_count)}")
-
-
-current_election.current_round.redistribute_winner_votes(current_election.current_round.winners[0],
-        test_current_election_round_count,
-        ballots_cleaned,
-        current_election.get_droop_quota())
