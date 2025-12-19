@@ -342,5 +342,38 @@ for ballot in ballots_cleaned:
 
 print(stv(ballots_dicts, seat_number))
 
+from random import shuffle
 
+def cli_generate_election():
+    print("STV Election Setup")
+    print("-" * 30)
 
+    # Candidate names
+    raw_names = input("Enter candidate names (comma-separated): ").strip()
+    candidates = [name.strip() for name in raw_names.split(",") if name.strip()]
+
+    if len(candidates) < 2:
+        raise ValueError("You must enter at least two candidates.")
+
+    # Seats
+    seats = int(input("Enter number of seats: ").strip())
+    if seats < 1 or seats >= len(candidates):
+        raise ValueError("Seats must be at least 1 and fewer than candidates.")
+
+    # Ballots
+    ballot_count = int(input("Enter number of ballots to generate: ").strip())
+    if ballot_count < 1:
+        raise ValueError("Must generate at least one ballot.")
+
+    print("\nGenerating ballots...\n")
+
+    ballots = []
+    for _ in range(ballot_count):
+        ranks = list(range(1, len(candidates) + 1))
+        shuffle(ranks)
+        ballot = {candidates[i]: ranks[i] for i in range(len(candidates))}
+        ballots.append(ballot)
+
+    return candidates, seats, ballots
+
+print(cli_generate_election())
