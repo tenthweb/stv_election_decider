@@ -122,11 +122,36 @@ def run_cli():
     print("=" * 50)
 
     # Get candidates from user
+
+
+
+
+
+    
     candidates_input = input("Enter candidate names, separated by commas: ")
     candidates = [c.strip() for c in candidates_input.split(",")]
 
     # Number of seats
-    seats = int(input("Enter number of seats to fill: "))
+    while True:
+        seats_input = input("Enter number of seats to fill: ").strip()
+
+        # Validate seats input, make sure to deal with blank input and non-number inputs
+
+        if seats_input == "":
+            print("Error: Seats cannot be blank.")
+            continue
+
+        if not seats_input.isdigit():
+            print("Error: Please enter a valid number.")
+            continue
+
+        seats = int(seats_input)
+
+        if seats <= 0:
+            print("Error: Number of seats must be greater than zero, or why would there be an election?")
+            continue
+
+        break
 
     # Number of ballots
     num_ballots = int(input("Enter number of ballots to generate: "))
