@@ -65,14 +65,13 @@ def stv(ballots, seats):
             new_ballots = []
             for prefs, weight in weighted_ballots:
                 if prefs and prefs[0] == winner:
+                    # Transfer the surplus portion
                     transferred = weight * transfer_fraction
-                    remaining = weight - transferred
-                    if remaining > 0:
-                        new_ballots.append([prefs, remaining])
                     if transferred > 0:
                         new_prefs = tuple(p for p in prefs if p != winner)
                         if new_prefs:
                             new_ballots.append([new_prefs, transferred])
+                # Else keep the ballot as-is
                 else:
                     new_ballots.append([prefs, weight])
 
