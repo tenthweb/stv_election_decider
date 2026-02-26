@@ -126,10 +126,17 @@ def run_cli():
 
 
 
+    # Get candidates from user
+    while True:
+        candidates_input = input("Enter candidate names, separated by commas: ")
+        # Strip whitespace and remove any empty strings
+        candidates = [c.strip() for c in candidates_input.split(",") if c.strip()]
 
-    
-    candidates_input = input("Enter candidate names, separated by commas: ")
-    candidates = [c.strip() for c in candidates_input.split(",")]
+        if not candidates:
+            print("Error: You must enter at least one valid candidate.")
+            continue
+
+        break
 
     # Number of seats
     while True:
