@@ -153,8 +153,30 @@ def run_cli():
 
         break
 
+
     # Number of ballots
-    num_ballots = int(input("Enter number of ballots to generate: "))
+
+    while True:
+        num_ballots = input("Enter number of ballots to generate: ").strip()
+        
+        # Validate seats input, make sure to deal with blank input and non-number inputs
+
+        if num_ballots == "":
+            print("Number of ballots cannot be blank.")
+            continue
+
+        if not num_ballots.isdigit():
+            print("Please enter a valid whole number.")
+            continue
+
+        # If num_ballots looks sort of like a number, try to convert to integer
+        num_ballots = int(num_ballots)
+
+        if num_ballots <= 0:
+            print("Number of ballots must be greater than 0.")
+            continue
+
+        break
 
     # Generate random ballots
     ballots = []
