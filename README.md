@@ -12,7 +12,7 @@ In this update:
 
 * Improvements were made to the election logic to correct vote transfer behaviour.
 
-* A TESTING.md file was added, documenting feature tests, edge case tests, expected vs actual outcomes, and bugs identified.
+* A TESTING.md file was added, documenting feature tests, expected vs actual outcomes, and bugs identified.
 
 * Screenshots were added to the README and TESTING to demonstrate application features, validation behaviour, and deployment evidence.
 
@@ -45,15 +45,21 @@ Using simple prompts, the program lets you define:
 
 From these inputs, the program generates a complete election dataset, including ranked ballots, is then passed directly into the STV counting engine. The simulator supports fractional vote transfers, a Droop quota, and round-by-round reporting, making the full counting process transparent and easy to follow.
 
+![The inputs and the initial outputs before the election (seats, ballots)](<screenshots/Screenshot 2026-02-27 114136.png>)
+
 ### Existing feature
 
 - User input for candidates and seats
 
 - Random ballot generation
 
-- Step-by-step STV counting process
+- Step-by-step STV counting process:
 
 ![The step by step process in action](<screenshots/Screenshot 2026-02-27 110643.png>)
+
+- Final results:
+
+![Final results](<screenshots/Screenshot 2026-02-27 111640.png>)
 
 ### Future features:
 - Save and load raw election data from spreadsheet using the Google Drive and Google Sheets APIs, or from a SQL database or other file.
@@ -104,7 +110,12 @@ The testing notes can be found at [TESTING.md](TESTING.md).
 
 - Solved bug where Droop quota calculation was incorrect (number of candidates was used in the calculation instead of number of seats).
 
-- Remaining bugs to fix: Null inputs causing crashes.
+- A bug was solved where the program crashed when the user entered no number for the number of seats:
+![The bug](image-1.png)
+
+- This was resolved by adding code to handle invalid data, testing of which can be seen below and in [TESTING.md](TESTING.md)
+
+![Bug fixed](<screenshots/Screenshot 2026-02-26 192628.png>)
 
 
 ## Deployment instructions:
@@ -116,6 +127,8 @@ The testing notes can be found at [TESTING.md](TESTING.md).
 4. Set python and nodejs as buildpacks in the "Settings" tab.
 5. In the "Deploy" tab, connect your GitHub repository containing this code.
 6. Enable automatic deploys or manually deploy the main branch.
+
+![Heroku deployment](<screenshots/Screenshot 2026-02-27 115211.png>)
 
 ## Credits
 - Developed by Matthew Byrne
