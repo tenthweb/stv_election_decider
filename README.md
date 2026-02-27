@@ -1,6 +1,21 @@
 # Election Simulator
 
+![startup screen](<screenshots/Screenshot 2026-02-27 112258.png>)
+
 This program allows users to quickly set up and run a simulated election using the **Single Transferable Vote (STV)** system.
+
+## Update 27-02-2026
+
+In this update:
+
+* Input validation and exception handling were added to prevent crashes caused by blank or invalid input.
+
+* Improvements were made to the election logic to correct vote transfer behaviour.
+
+* A TESTING.md file was added, documenting feature tests, edge case tests, expected vs actual outcomes, and bugs identified.
+
+* Screenshots were added to the README and TESTING to demonstrate application features, validation behaviour, and deployment evidence.
+
 
 ## Intended Use
 
@@ -37,6 +52,8 @@ From these inputs, the program generates a complete election dataset, including 
 - Random ballot generation
 
 - Step-by-step STV counting process
+
+![The step by step process in action](<screenshots/Screenshot 2026-02-27 110643.png>)
 
 ### Future features:
 - Save and load raw election data from spreadsheet using the Google Drive and Google Sheets APIs, or from a SQL database or other file.
@@ -80,14 +97,8 @@ From these inputs, the program generates a complete election dataset, including 
   - `stv(ballots, seats)`: Main function to run the STV election process.
 
 ## Testing:
-- I have manually tested the code by running multiple elections, varying the following to ensure the STV process works correctly and produces expected results.
 
-  - candidate names
-  - seat numbers
-  - ballot counts
-  - Empty and invalid inputs
-
-- I've passed the code through a PEP8 linter to ensure it adheres to Python coding standards.
+The testing notes can be found at [TESTING.md](TESTING.md).
 
 ### Bugs:
 
